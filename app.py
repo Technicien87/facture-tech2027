@@ -1,112 +1,98 @@
-from flask import Flask, request
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'tech2027_secret_key_change_moi'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///boutique.db'
+db = SQLAlchemy(app)
 
-# Tes services et prix de TECH 2027
-SERVICES = {
-    "Formatage": 20000,
-    "Réparation Écran": 45000,
-    "Installation Windows": 10000,
-    "Récupération Données": 35000,
-    "Nettoyage Virus": 15000,
-    "Formation Python": 50000
-}
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
-STYLE = """
-<style>
-    body { font-family: Arial; background: #f0f4f8; padding: 30px; }
-   .cadre { 
-        background: white; max-width: 500px; margin: auto; padding: 30px; 
-        border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h1 { color: #0052cc; text-align: center; border-bottom: 3px solid #ff8c00; padding-bottom: 10px; }
-    input, select { 
-        width: 100%; padding: 10px; margin: 8px 0; border: 2px solid #ddd; 
-        border-radius: 5px; box-sizing: border-box; font-size: 16px;
-    }
-    button { 
-        background: #0052cc; color: white; padding: 12px; width: 100%; 
-        border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; 
-        margin-top: 10px;
-    }
-    button:hover { background: #ff8c00; }
-   .btn-imprimer { background: #28a745; }
-   .btn-imprimer:hover { background: #218838; }
-   .facture p { font-size: 18px; line-height: 1.6; }
-   .btn-retour { 
-        display: inline-block; margin-top: 20px; color: #0052cc; 
-        text-decoration: none; font-weight: bold;
-    }
-    @media print {
-       .btn-imprimer,.btn-retour { display: none; }
-        body { background: white; }
-    }
-</style>
-"""
+# TABLE CLIENTS
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100))
+    nom = db.Column(db.String(100))
 
-# JavaScript pour mettre le prix auto
-SCRIPT = """
-<script>
-    function mettre_prix() {
-        const service = document.getElementById('service').value;
-        const prix = document.getElementById('prix');
-        const tarifs = %s;
-        prix.value = tarifs[service] || '';
-    }
-</script>
-""" % str(SERVICES).replace("'", '"')
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-def generer_facture_web(nom_client, service, prix):
-    return f"""
-    {STYLE}
-    <div class="cadre facture">
-        <h1>TECHNOLOGIE D'USINE 2027</h1>
-        <p><b>Client :</b> {nom_client}</p>
-        <p><b>Service :</b> {service}</p>
-        <p><b>Prix :</b> {prix} FCFA</p>
-        <hr>
-        <p><b>Technicien :</b> Michael Yohoua</p>
-        <p><b>Contact :</b> +225 05 94 66 56 80</p>
-        <h3 style="text-align:center; color:#ff8c00;">Merci et à bientôt!</h3>
-        <button class="btn-imprimer" onclick="window.print()">IMPRIMER EN PDF</button>
-        <br><a href="/" class="btn-retour">← Faire une autre facture</a>
-    </div>
-    """
+# PAGE ACCUEIL BOUTIQUE
+@app.route('/')
+def home():
+    if current_user.is_authenticated:
+        return f"""
+        <h1>Bienvenue {current_user.nom}</h1>
+        <p><a href='/logout'>Se déconnecter</a></p>
+        <h2>TECH 2027 BOUTIQUE</h2>
+        <p>Compte: {current_user.email}</p>
+        <p><b>Produits bientôt disponibles...</b></p>
+        """
+    return redirect(url_for('login'))
 
-@app.route("/", methods=["GET", "POST"])
-def formulaire():
-    if request.method == "POST":
-        client = request.form["client"]
-        service = request.form["service"]
-        prix = request.form["prix"]
-        return generer_facture_web(client, service, prix)
+# PAGE INSCRIPTION
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        nom = request.form['nom']
+        
+        if User.query.filter_by(email=email).first():
+            return "Email déjà utilisé. <a href='/login'>Se connecter</a>"
+        
+        new_user = User(email=email, password=password, nom=nom)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
     
-    # On crée les options du menu déroulant
-    options = "".join([f'<option value="{s}">{s} - {p} FCFA</option>' for s, p in SERVICES.items()])
-    
-    return f'''
-        {STYLE}
-        {SCRIPT}
-        <div class="cadre">
-            <h1>TECH 2027 - Générateur de Facture</h1>
-            <form method="POST">
-                <label><b>Nom du client :</b></label>
-                <input type="text" name="client" required>
-                
-                <label><b>Service rendu :</b></label>
-                <select id="service" name="service" onchange="mettre_prix()" required>
-                    <option value="">-- Choisis un service --</option>
-                    {options}
-                </select>
-                
-                <label><b>Prix FCFA :</b></label>
-                <input type="number" id="prix" name="prix" required>
-                
-                <button type="submit">GÉNÉRER LA FACTURE</button>
-            </form>
-        </div>
+    return '''
+        <h2>Inscription TECH 2027</h2>
+        <form method="post">
+            Nom: <input name="nom" required><br><br>
+            Email: <input name="email" type="email" required><br><br>
+            Mot de passe: <input name="password" type="password" required><br><br>
+            <input type="submit" value="Créer mon compte">
+        </form>
+        <p><a href="/login">Déjà un compte ? Se connecter</a></p>
     '''
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-                
+# PAGE CONNEXION
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+        
+        if user and user.password == password:
+            login_user(user)
+            return redirect(url_for('home'))
+        return "Email ou mot de passe incorrect. <a href='/login'>Réessayer</a>"
+    
+    return '''
+        <h2>Connexion TECH 2027</h2>
+        <form method="post">
+            Email: <input name="email" type="email" required><br><br>
+            Mot de passe: <input name="password" type="password" required><br><br>
+            <input type="submit" value="Se connecter">
+        </form>
+        <p><a href="/register">Pas de compte ? S'inscrire</a></p>
+    '''
+
+# DECONNEXION
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+if name == 'main':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
