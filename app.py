@@ -95,3 +95,18 @@ def logout():
 with app.app_context():
     db.create_all()
     
+    # On vide les anciens produits test si y'en a
+    Produit.query.delete()
+    
+    # Tes 4 produits TECH 2027
+    produits = [
+        Produit(nom='Samsung Galaxy A16 (4/128 Go)', prix=115600, description='Smartphone Samsung 4Go RAM 128Go Stockage'),
+        Produit(nom='Redmi 15 (6Go/128Go 4G)', prix=78500, description='Xiaomi Redmi 6Go RAM 128Go 4G'),
+        Produit(nom='HP Notebook 15 (4GB, 1TB, 15.6")', prix=209900, description='PC Portable HP 4Go RAM 1To Disque 15.6 pouces'),
+        Produit(nom='Écouteur Bluetooth Pro', prix=10000, description='Écouteurs sans fil Bluetooth haute qualité')
+    ]
+    
+    db.session.add_all(produits)
+    db.session.commit()
+    
+    
