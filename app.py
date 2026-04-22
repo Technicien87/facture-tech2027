@@ -95,5 +95,5 @@ def logout():
 with app.app_context():
     db.create_all()
 
-if name == 'main':
+if __name == '__main__':
     app.run(debug=True)
