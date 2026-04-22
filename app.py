@@ -1,4 +1,3 @@
-> Michael:
 from flask import Flask, render_template_string, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -108,3 +107,8 @@ with app.app_context():
         produits = [
             Produit(nom='Samsung Galaxy A16 (4/128 Go)', prix=115600, description='Smartphone Samsung 4Go RAM 128Go Stockage'),
             Produit(nom='Redmi 15 (6Go/128Go 4G)', prix=78500, description='Xiaomi Redmi 6Go RAM 128Go 4G'),
+            Produit(nom='HP Notebook 15 (4GB, 1TB, 15.6")', prix=209900, description='PC Portable HP 4Go RAM 1To Disque 15.6 pouces'),
+            Produit(nom='Écouteur Bluetooth Pro', prix=10000, description='Écouteurs sans fil Bluetooth haute qualité')
+        ]
+        db.session.add_all(produits)
+        db.session.commit()
