@@ -92,7 +92,8 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+with app.app_context():
+    db.create_all()
+
 if name == 'main':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
