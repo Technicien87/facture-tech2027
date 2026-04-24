@@ -341,7 +341,7 @@ def manifest():
 
 @app.route('/sw.js')
 def service_worker():
-    return """
+    return '''
     self.addEventListener('install', function(e) {
       e.waitUntil(caches.open('tech2027').then(function(cache) {
         return cache.addAll(['/']);
@@ -350,6 +350,19 @@ def service_worker():
     self.addEventListener('fetch', function(e) {
       e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     });
-    """, 200, {'Content-Type': 'application/javascript'}
+    ''', 200, {'Content-Type': 'application/javascript'}
+
+@app.route('/manifest.json')
+def manifest():
+    return '''{
+  "name": "TECH2027 Facture",
+  "short_name": "TECH2027",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#1E90FF",
+  "icons": []
+}''', 200, {'Content-Type': 'application/manifest+json'}
+
 if __name__ == '__main__':
     app.run(debug=True)
