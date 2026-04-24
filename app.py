@@ -1,4 +1,3 @@
-> Michael:
 from flask import Flask, request, redirect, url_for, session, flash, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
