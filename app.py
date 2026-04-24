@@ -60,7 +60,6 @@ header h1{margin:0;font-size:24px}header h1 span{color:#FF6A00}
 .btn{color:white;text-decoration:none;background:#FF6A00;padding:8px 15px;border-radius:5px;margin-left:10px}
 .container{padding:20px;max-width:1200px;margin:auto}
 
-> Michael:
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px;margin-top:20px}
 .card{background:white;border-radius:10px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center}
 .card img{width:100%;height:150px;object-fit:cover;border-radius:5px;background:#eee}
@@ -137,7 +136,6 @@ def login():
             flash('Email ou mot de passe incorrect')
     return render_template_string(LOGIN_PAGE)
 
-> Michael:
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
