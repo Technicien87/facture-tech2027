@@ -76,13 +76,7 @@ tr:nth-child(even){background:#f9f9f9}
 </style>
 """
 
-LOGIN_PAGE = """<!doctype html><html><head><title>TECH 2027</title>"""+BASE_STYLE+"""</head><body>
-<div class="box"><h1 class="logo">TECH<span>2027</span></h1><h2>Connexion</h2>
-{% with messages = get_flashed_messages() %}{% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}{% endwith %}
-<form method="post"><input name="email" type="email" placeholder="Email" required>
-<input name="password" type="password" placeholder="Mot de passe" required>
-<button type="submit">Se connecter</button></form>
-<p style="text-align:center;margin-top:15px">Pas de compte? <a href="{{ url_for('register') }}" style="color:#1E90FF">S'inscrire</a></p></div></body></html>"""
+LOGIN_PAGE = """<!doctype html><html><head><link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#1E90FF"><title>TECH 2027</title>"""+BASE_STYLE+"""</head><body><div class="box"><h1 class="logo">TECH<span>2027</span></h1><h2>Connexion</h2>{% with messages = get_flashed_messages() %}{% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}{% endwith %}<form method="post"><input name="email" type="email" placeholder="Email" required><input name="password" type="password" placeholder="Mot de passe" required><button type="submit">Se connecter</button></form><p style="text-align:center;margin-top:15px">Pas de compte? <a href="{{ url_for('register') }}" style="color:#1E90FF">S'inscrire</a></p></div></body></html>"""<form method="post"><input name="email" type="email" placeholder="Email" required><input name="password" type="password" placeholder="Mot de passe" required><button type="submit">Se connecter</button></form><p style="text-align:center;margin-top:15px">Pas de compte? <a href="{{ url_for('register') }}" style="color:#1E90FF">S'inscrire</a></p></div></body></html>"""
 
 REGISTER_PAGE = """<!doctype html><html><head><title>TECH 2027</title>"""+BASE_STYLE+"""</head><body>
 <div class="box"><h1 class="logo">TECH<span>2027</span></h1><h2>Inscription</h2>
@@ -326,6 +320,36 @@ with app.app_context():
             Produit(nom='TV Samsung 55" 4K', prix=420000, image='https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400', categorie_id=3),
         ]
         db.session.add_all(prods); db.session.commit()
+@app.route('/manifest.json')
+def manifest():
+    return {
+        "name": "TECH2027",
+        "short_name": "TECH2027",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#0A2540",
+        "theme_color": "#1E90FF",
+        "description": "La boutique e-commerce TECH2027",
+        "icons": [
+            {
+                "src": "https://cdn-icons-png.flaticon.com/512/891419.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            }
+        ]
+    }
 
+@app.route('/sw.js')
+def service_worker():
+    return """
+    self.addEventListener('install', function(e) {
+      e.waitUntil(caches.open('tech2027').then(function(cache) {
+        return cache.addAll(['/']);
+      }));
+    });
+    self.addEventListener('fetch', function(e) {
+      e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    });
+    """, 200, {'Content-Type': 'application/javascript'}
 if __name__ == '__main__':
     app.run(debug=True)
