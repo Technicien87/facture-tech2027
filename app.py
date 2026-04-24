@@ -184,10 +184,13 @@ def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    produits = Produit.query.all()
     user = User.query.get(session['user_id'])
-    return render_template_string(TEMPLATE, produits=produits, user=user)
-
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+    
+    produits = Produit.query.all()
+    return render_template('index.html', user=user, produits=produits)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
